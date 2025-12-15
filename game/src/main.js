@@ -3,22 +3,18 @@ import MainScene from './scenes/MainScene.js'
 
 const config = {
   type: Phaser.AUTO,
-
   parent: 'game-container',
-
-  width: 800,
-  height: 600,
-
+  width: 600,
+  height: 550,
+  zoom: 1,
   backgroundColor: '#000000',
-
   physics: {
     default: 'arcade',
     arcade: {
       gravity: { y: 0 },
-      debug: false
+      // debug: true
     }
   },
-
   scene: [MainScene]
 }
 
