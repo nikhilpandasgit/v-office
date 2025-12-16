@@ -1,15 +1,7 @@
 import Phaser from 'phaser'
-
-const PLAYER_TYPES = {
-  type1: {
-    spriteKey: 'sprite',
-    frame: 936,
-    left: { start: 1053, end: 1056 },
-    right: { start: 975, end: 978 },
-    up: { start: 1014, end: 1017 },
-    down: { start: 936, end: 939 }
-  }
-}
+import { getEntityLocation } from '../utils/coordinates'
+import Character from '../entities/Character'
+import { PLAYER_TYPES } from '../utils/CharacterTypes'
 
 export default class MainScene extends Phaser.Scene {
   constructor() {
@@ -34,39 +26,48 @@ export default class MainScene extends Phaser.Scene {
     map.createLayer('ladders and paths', tileset, 0, 0)
     map.createLayer('plants-and-buildings-and-trees', tileset, 0, 0)
 
-    this.physics.world.setBounds(
-      0,
-      0,
-      map.widthInPixels,
-      map.heightInPixels
-    )
+    this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels)
+
     /* ---------------- SPAWNPOINT ---------------- */
     const spawnLayer = map.getObjectLayer('spawnpoints')
     if (!spawnLayer || spawnLayer.objects.length === 0) {
-      throw new Error('No spawnpoints found (object layer)')
+      throw new Error('No spawnpoints found')
     }
 
     const spawn = Phaser.Utils.Array.GetRandom(spawnLayer.objects)
 
-    /* ---------------- PLAYER ---------------- */
-    const type = PLAYER_TYPES.type1
+    /* ---------------- ANIMATIONS (ONCE) ---------------- */
+    this.createPlayerAnimations(PLAYER_TYPES.type1)
 
-    this.player = this.physics.add.sprite(
+    /* ---------------- CHARACTERS ---------------- */
+    this.characters = new Map()
+
+    const playerChar = new Character(
+      this,
       spawn.x,
       spawn.y,
-      type.spriteKey,
-      type.frame
+      PLAYER_TYPES.type1,
+      'player-1'
     )
 
-    this.player.body.setSize(7, 9)
-    this.player.body.setOffset(3, 4)
-    this.player.setCollideWorldBounds(true)
+    const npcChar = new Character(
+      this,
+      spawn.x + 64,
+      spawn.y,
+      PLAYER_TYPES.type1,
+      'npc-1'
+    )
+    npcChar.ai = {
+      direction: 1,
+      timer: 0
+    }
 
-    this.createPlayerAnimations(type)
+    this.characters.set(playerChar.id, playerChar)
+    this.characters.set(playerChar.id, npcChar)
+    this.localPlayerId = playerChar.id
 
-    /* ---------------- BOUNDARIES (OBJECT LAYER COLLISION) ---------------- */
+    /* ---------------- BOUNDARIES ---------------- */
     const boundaryLayer = map.getObjectLayer('boundaries')
-
     if (!boundaryLayer) {
       throw new Error('Object layer "boundaries" not found')
     }
@@ -80,87 +81,84 @@ export default class MainScene extends Phaser.Scene {
         obj.width,
         obj.height
       )
-
       this.physics.add.existing(rect, true)
       this.boundaries.add(rect)
     })
 
-    this.physics.add.collider(this.player, this.boundaries, (player, boundary) => {
-      console.log('Colliding with boundary:', boundary)
+    this.characters.forEach(char => {
+      this.physics.add.collider(char.sprite, this.boundaries)
     })
 
-
     /* ---------------- CAMERA ---------------- */
-    this.cameras.main.setBounds(
-      0,
-      0,
-      map.widthInPixels,
-      map.heightInPixels
-    )
-
-    this.cameras.main.startFollow(this.player, true, 0.1, 0.1)
+    const localChar = this.characters.get(this.localPlayerId)
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels)
+    this.cameras.main.startFollow(localChar.sprite, true, 0.1, 0.1)
     this.cameras.main.setZoom(2)
 
     /* ---------------- INPUT ---------------- */
     this.cursors = this.input.keyboard.createCursorKeys()
-    this.lastDir = 'down'
+
+    /* ---------------- DEBUG COORDS ---------------- */
+    this.coordText = this.add.text(10, 10, '', {
+      fontFamily: 'monospace',
+      fontSize: '14px',
+      color: '#ffffff',
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      padding: { x: 6, y: 4 }
+    })
+
+    this.coordText.setScrollFactor(0)
+    this.coordText.setDepth(9999)
+  }
+
+  update() {
+    const localChar = this.characters.get(this.localPlayerId)
+    if (!localChar) return
+
+    const speed = 50
+    let dir = null
+
+    if (this.cursors.left.isDown) dir = { x: -1, y: 0 }
+    else if (this.cursors.right.isDown) dir = { x: 1, y: 0 }
+    else if (this.cursors.up.isDown) dir = { x: 0, y: -1 }
+    else if (this.cursors.down.isDown) dir = { x: 0, y: 1 }
+
+    localChar.move(dir, speed)
+
+    const loc = getEntityLocation(localChar.sprite)
+
+    this.coordText.setText([
+      `World  : ${loc.world.x.toFixed(1)}, ${loc.world.y.toFixed(1)}`,
+      `Tile   : ${loc.tile.x}, ${loc.tile.y}`,
+      `Region : ${loc.regionId}`
+    ])
   }
 
   createPlayerAnimations(type) {
     const anims = this.anims
-
     anims.create({
       key: 'left',
       frames: anims.generateFrameNumbers(type.spriteKey, type.left),
       frameRate: 8,
       repeat: -1
     })
-
     anims.create({
       key: 'right',
       frames: anims.generateFrameNumbers(type.spriteKey, type.right),
       frameRate: 8,
       repeat: -1
     })
-
     anims.create({
       key: 'up',
       frames: anims.generateFrameNumbers(type.spriteKey, type.up),
       frameRate: 8,
       repeat: -1
     })
-
     anims.create({
       key: 'down',
       frames: anims.generateFrameNumbers(type.spriteKey, type.down),
       frameRate: 8,
       repeat: -1
     })
-  }
-
-  update() {
-    const speed = 50
-    this.player.setVelocity(0)
-
-    if (this.cursors.left.isDown) {
-      this.player.setVelocityX(-speed)
-      this.player.anims.play('left', true)
-      this.lastDir = 'left'
-    } else if (this.cursors.right.isDown) {
-      this.player.setVelocityX(speed)
-      this.player.anims.play('right', true)
-      this.lastDir = 'right'
-    } else if (this.cursors.up.isDown) {
-      this.player.setVelocityY(-speed)
-      this.player.anims.play('up', true)
-      this.lastDir = 'up'
-    } else if (this.cursors.down.isDown) {
-      this.player.setVelocityY(speed)
-      this.player.anims.play('down', true)
-      this.lastDir = 'down'
-    } else {
-      this.player.anims.stop()
-      this.player.setFrame(PLAYER_TYPES.type1[this.lastDir].start)
-    }
   }
 }
