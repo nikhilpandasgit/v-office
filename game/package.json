@@ -9,9 +9,12 @@
     "preview": "vite preview --host"
   },
   "dependencies": {
-    "phaser": "^3.90.0"
+    "phaser": "^3.90.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^5.1.2",
     "vite": "^7.2.4"
   }
 }

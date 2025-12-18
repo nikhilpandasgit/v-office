@@ -1,50 +1,104 @@
-You are helping me with a multiplayer web-based game project.
+# 2D Top-Down Web Game - Architecture Overview
 
-Tech stack:
-- Client: Phaser 3 (Arcade Physics), JavaScript, Vite
-- Server: FastAPI (Python) — server-authoritative planned later
-- Rendering: client-side only (no server rendering)
-- Assets: Tiled tilemap (JSON), embedded tileset (single spritesheet.png, 16x16 tiles)
+## Tech Stack
+- **Client**: Phaser 3 + Vite
+- **Backend** (planned): FastAPI (for future multiplayer)
 
-Current state of the client:
-- index.html → main.js → MainScene.js
-- Tilemap loads correctly using an embedded tileset (no external .tsx)
-- Map layers include:
-  - ground
-  - paths
-  - plants-and-buildings-and-trees
-  - ladders (tile layer, visual only)
-  - spawnpoints (object layer)
-  - boundaries (object layer, rectangle objects)
+## Current State
+- Client-only for now (no networking yet)
+- Tilemap created in Tiled
+- **Tile size**: 16×16
+- **Tileset**: Embedded (`spritesheet.png`)
 
-Player setup:
-- Player is a Phaser Arcade Physics sprite using a spritesheet
-- Player animations are defined via frame ranges (left/right/up/down)
-- Player spawns at a random object from the "spawnpoints" object layer
-- Camera follows the player and is bounded to the map
-- World bounds are set to map.widthInPixels / map.heightInPixels
+### Map Layers
+1. `ground`
+2. `ladders and paths`
+3. `plants-and-buildings-and-trees`
 
-Collisions:
-- Boundaries are implemented using Tiled object layers
-- Each boundary object is converted into a Phaser Rectangle
-- Rectangles are added as static physics bodies
-- Player collides with these static rectangles
-- Tile-based collision is NOT used
-- Player hitbox is manually reduced and offset (feet-based collision)
+### Object Layers
+- `spawnpoints` (player/NPC spawn)
+- `boundaries` (rectangular collision objects)
 
-Known constraints / rules:
-- Do NOT use setCollisionByProperty
-- Do NOT use external tilesets (.tsx)
-- Object layers must be handled via physics bodies
-- Visual ladder tiles are separate from ladder interaction logic
-- Phaser camera bounds ≠ physics world bounds (both are set explicitly)
+### Current Features
+- Map renders correctly
+- Camera follows player
+- World bounds are set
 
-What I usually need help with:
-- Phaser scene logic and architecture
-- Object-layer collisions and interaction zones
-- Player movement and animation
-- Debugging rendering / physics mismatches
-- Preparing the client for future multiplayer sync
+## Architecture Decisions
 
-Assume all of the above is already implemented and working unless I say otherwise.
-Focus only on the next problem I ask.
+### Character System (Not Hardcoded Players)
+- **`Character` class**:
+  - Owns a Phaser physics sprite
+  - Handles movement + animations
+  - Does **NOT** read keyboard input
+
+- **`MainScene`**:
+  - Orchestrates the world
+  - Handles input
+  - Decides which character is locally controlled
+  - Characters stored in `Map<id, Character>`
+  - One character = local player
+  - Other characters = NPCs (moved via code, no input)
+
+### Movement Model
+- Input → direction vector → Character.move(dir, speed)
+
+Same movement pipeline for:
+- Player
+- NPCs
+- Future multiplayer entities
+
+## Coordinate System (Implemented)
+
+### Hierarchy
+1. **Canonical source**: World pixel coordinates
+2. **Derived systems**:
+   - Tile coordinates (world → tile)
+   - Region coordinates (tile → region)
+
+### Helper Function
+`getEntityLocation(sprite)` returns:
+- `world {x, y}`
+- `tile {x, y}`
+- `region {x, y}`
+- `regionId "x:y"`
+
+### Purpose
+- Debugging
+- Future triggers
+- Multiplayer preparation
+- **Note**: Coordinates describe position, they do **NOT** drive physics.
+
+## Collisions
+- Boundaries = Tiled object-layer rectangles
+- Converted into static physics bodies
+- All characters collide with boundaries
+
+## Camera
+- Follows the local player's sprite
+- Zoomed (pixel-art style)
+- Clamped to world bounds
+
+## Animations
+- Sprite atlas-based (single spritesheet)
+- Directional animations: `up`, `down`, `left`, `right`
+- Shared across all characters
+
+## NPCs
+- Implemented as `Character` instances
+- Moved via simple AI logic (timed direction switching)
+- No keyboard or input dependency
+
+## Development Principles
+### What I Care About
+- Clean architecture
+- Systems that scale to multiplayer
+- Avoiding hacks / rewrites
+- Understanding **why** things are designed a certain way
+
+### Assumptions for Discussions
+- Phaser 3 + Arcade Physics
+- ES modules
+- Prefer clean architecture over quick hacks
+- Explain concepts clearly but practically
+- Don't suggest rebuilding unless necessary

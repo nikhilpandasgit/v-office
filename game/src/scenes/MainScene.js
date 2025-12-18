@@ -18,6 +18,10 @@ export default class MainScene extends Phaser.Scene {
   }
 
   create() {
+
+    this.clientId = localStorage.getItem('clientId') || 'player-1';
+    localStorage.setItem('clientId', this.clientId);
+    
     /* ---------------- MAP ---------------- */
     const map = this.make.tilemap({ key: 'map' })
     const tileset = map.addTilesetImage('spritesheet', 'spritesheet')
@@ -57,15 +61,16 @@ export default class MainScene extends Phaser.Scene {
       PLAYER_TYPES.type1,
       'npc-1'
     )
-    npcChar.ai = {
-      direction: 1,
-      timer: 0
-    }
-
     this.characters.set(playerChar.id, playerChar)
-    this.characters.set(playerChar.id, npcChar)
-    this.localPlayerId = playerChar.id
+    this.characters.set(npcChar.id, npcChar)
+    console.log(this.characters);
 
+    if(!localStorage.getItem('gameState')){
+      localStorage.setItem(
+        'gameState',
+        JSON.stringify({ characters : this.characters})
+      )
+    }
     /* ---------------- BOUNDARIES ---------------- */
     const boundaryLayer = map.getObjectLayer('boundaries')
     if (!boundaryLayer) {
@@ -90,48 +95,45 @@ export default class MainScene extends Phaser.Scene {
     })
 
     /* ---------------- CAMERA ---------------- */
-    const localChar = this.characters.get(this.localPlayerId)
+    const localChar = this.characters.get(this.clientId)
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels)
     this.cameras.main.startFollow(localChar.sprite, true, 0.1, 0.1)
     this.cameras.main.setZoom(2)
 
     /* ---------------- INPUT ---------------- */
     this.cursors = this.input.keyboard.createCursorKeys()
-
-    /* ---------------- DEBUG COORDS ---------------- */
-    this.coordText = this.add.text(10, 10, '', {
-      fontFamily: 'monospace',
-      fontSize: '14px',
-      color: '#ffffff',
-      backgroundColor: 'rgba(0,0,0,0.5)',
-      padding: { x: 6, y: 4 }
-    })
-
-    this.coordText.setScrollFactor(0)
-    this.coordText.setDepth(9999)
   }
 
   update() {
-    const localChar = this.characters.get(this.localPlayerId)
-    if (!localChar) return
+    const raw = localStorage.getItem('gameState')
+    const state = raw ? JSON.parse(raw) : {characters : {}}
 
-    const speed = 50
-    let dir = null
+    this.characters.forEach(char => {
+      if (char.id === this.clientId){
+        const speed = 50
+        let dir = null
 
-    if (this.cursors.left.isDown) dir = { x: -1, y: 0 }
-    else if (this.cursors.right.isDown) dir = { x: 1, y: 0 }
-    else if (this.cursors.up.isDown) dir = { x: 0, y: -1 }
-    else if (this.cursors.down.isDown) dir = { x: 0, y: 1 }
+        if (this.cursors.left.isDown) dir = { x: -1, y: 0 }
+        else if (this.cursors.right.isDown) dir = { x: 1, y: 0 }
+        else if (this.cursors.up.isDown) dir = { x: 0, y: -1 }
+        else if (this.cursors.down.isDown) dir = { x: 0, y: 1 }
 
-    localChar.move(dir, speed)
+        char.move(dir, speed)
 
-    const loc = getEntityLocation(localChar.sprite)
+        state.characters[char.id] = {
+          x: char.sprite.x,
+          y: char.sprite.y,
+          dir: char.lastDir
+        }
+      } else {
+        const data = state.characters[char.id];
+        if(!data) return
 
-    this.coordText.setText([
-      `World  : ${loc.world.x.toFixed(1)}, ${loc.world.y.toFixed(1)}`,
-      `Tile   : ${loc.tile.x}, ${loc.tile.y}`,
-      `Region : ${loc.regionId}`
-    ])
+        char.sprite.setPosition(data.x, data.y)
+        char.sprite.anims.play(data.dir, true)
+      }
+    })
+    // localStorage.setItem('gameState', JSON.stringify(state));
   }
 
   createPlayerAnimations(type) {
