@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&display=swap');
+
+:root{
+    --primary-color: #646cff;
+    --secondary-color: #1a1a1a;
+    --text-color: #fff;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  font-family: 'Lora', sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  /* overflow: hidden; */
+}
+html{
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
