@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
-import { supabase } from './utils/supabase'
+import { supabase } from './lib/supabase'
 import AppRoutes from './components/routes/AppRoutes'
 
 function App() {

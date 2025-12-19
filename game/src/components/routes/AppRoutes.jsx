@@ -14,7 +14,7 @@ export default function AppRoutes({session}) {
                 path="/overview"
                 element={
                     <ProtectedRoute session={session}>
-                        <Overview />
+                        <Overview session={session}/>
                     </ProtectedRoute>
                 }
             />

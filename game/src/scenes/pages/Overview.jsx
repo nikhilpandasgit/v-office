@@ -1,22 +1,11 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../../utils/supabase'
+import { supabase } from '../../lib/supabase'
 import { useNavigate } from 'react-router-dom'
+import apiCall from '../../lib/apiCall'
 
-export default function Overview() {
+export default function Overview({session}) {
   const navigate = useNavigate()
-  const [user, setUser] = useState(null)
-
-  useEffect(() => {
-    // Check active session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-          setUser(session.user)
-      } else {
-          // If no session, potentially redirect to auth or just show guest state
-          // For now, let's just stay here.
-      }
-    })
-  }, [])
+  const user = session.user;
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -41,28 +30,17 @@ export default function Overview() {
       }}>
         <h1 style={{ margin: 0, fontSize: '1.5rem', color: '#646cff' }}>V-Office</h1>
         <div>
-           {user ? (
-               <div style={{display: 'flex', gap: '1rem', alignItems: 'center'}}>
-                   <span style={{color: '#aaa'}}>{user.email}</span>
-                   <button onClick={handleSignOut} style={{
-                       padding: '0.5rem 1rem',
-                       backgroundColor: '#333',
-                       border: 'none',
-                       borderRadius: '4px',
-                       color: '#fff',
-                       cursor: 'pointer'
-                   }}>Sign Out</button>
-               </div>
-           ) : (
-             <button onClick={() => navigate('/auth')} style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#646cff',
-                border: 'none',
-                borderRadius: '4px',
-                color: '#fff',
-                cursor: 'pointer'
-             }}>Sign In</button>
-           )}
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+            <span style={{ color: '#aaa' }}>{user.email}</span>
+            <button onClick={handleSignOut} style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: '#333',
+              border: 'none',
+              borderRadius: '4px',
+              color: '#fff',
+              cursor: 'pointer'
+            }}>Sign Out</button>
+          </div>
         </div>
       </header>
       
@@ -95,23 +73,27 @@ export default function Overview() {
                   boxShadow: '0 4px 14px 0 rgba(100, 108, 255, 0.39)'
                 }}
               >
-                  Enter Office
-              </button>
-              
-              <button 
-                 style={{
-                  padding: '1rem 2rem',
-                  fontSize: '1.1rem',
-                  backgroundColor: 'transparent',
-                  border: '1px solid #444',
-                  borderRadius: '6px',
-                  color: '#fff',
-                  cursor: 'pointer'
-                }}
-              >
-                  Customize Character
-              </button>
-          </div>
+            Enter Office
+          </button>
+
+          <button
+            onClick={async () => {
+              const response = await apiCall.get('/admin/users')
+              console.log(response.data)
+            }}
+            style={{
+              padding: '1rem 2rem',
+              fontSize: '1.1rem',
+              backgroundColor: 'transparent',
+              border: '1px solid #444',
+              borderRadius: '6px',
+              color: '#fff',
+              cursor: 'pointer'
+            }}
+          >
+            Customize Character
+          </button>
+        </div>
           
           {/* Feature Grid */}
           <div style={{ marginTop: '5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem'}}>
