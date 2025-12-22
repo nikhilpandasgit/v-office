@@ -1,11 +1,15 @@
 import Phaser from 'phaser'
-import { getEntityLocation } from '../utils/coordinates'
+// import { getEntityLocation } from '../utils/coordinates'
+import { socket } from '../lib/socket'
 import Character from '../entities/Character'
 import { PLAYER_TYPES } from '../utils/CharacterTypes'
 
 export default class MainScene extends Phaser.Scene {
   constructor() {
     super('MainScene')
+    this.characters = new Map()
+    this.clientId = null
+    this.seq = 0
   }
 
   preload() {
@@ -19,58 +23,54 @@ export default class MainScene extends Phaser.Scene {
 
   create() {
 
-    this.clientId = localStorage.getItem('clientId') || 'player-1';
-    localStorage.setItem('clientId', this.clientId);
-    
     /* ---------------- MAP ---------------- */
     const map = this.make.tilemap({ key: 'map' })
     const tileset = map.addTilesetImage('spritesheet', 'spritesheet')
 
-    map.createLayer('ground', tileset, 0, 0)
-    map.createLayer('ladders and paths', tileset, 0, 0)
-    map.createLayer('plants-and-buildings-and-trees', tileset, 0, 0)
+    map.createLayer('ground', tileset)
+    map.createLayer('ladders and paths', tileset)
+    map.createLayer('plants-and-buildings-and-trees', tileset)
 
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels)
 
-    /* ---------------- SPAWNPOINT ---------------- */
-    const spawnLayer = map.getObjectLayer('spawnpoints')
-    if (!spawnLayer || spawnLayer.objects.length === 0) {
-      throw new Error('No spawnpoints found')
-    }
-
-    const spawn = Phaser.Utils.Array.GetRandom(spawnLayer.objects)
+    // /* ---------------- SPAWNPOINT ---------------- */
+    // const spawnLayer = map.getObjectLayer('spawnpoints')
+    // if (!spawnLayer || spawnLayer.objects.length === 0) {
+    //   throw new Error('No spawnpoints found')
+    // }
+    // console.log(spawnLayer);
+    // const spawn = Phaser.Utils.Array.GetRandom(spawnLayer.objects)
 
     /* ---------------- ANIMATIONS (ONCE) ---------------- */
-    this.createPlayerAnimations(PLAYER_TYPES.type1)
+    Object.values(PLAYER_TYPES).forEach((playerType) => {
+      this.createPlayerAnimations(playerType)
+    })
 
-    /* ---------------- CHARACTERS ---------------- */
-    this.characters = new Map()
+    // /* ---------------- CHARACTERS ---------------- */
+    // const playerChar = new Character(
+    //   this,
+    //   spawn.x,
+    //   spawn.y,
+    //   PLAYER_TYPES.type1,
+    //   'player-1'
+    // )
 
-    const playerChar = new Character(
-      this,
-      spawn.x,
-      spawn.y,
-      PLAYER_TYPES.type1,
-      'player-1'
-    )
+    // const player2Char = new Character(
+    //   this,
+    //   spawn.x + 20,
+    //   spawn.y + 20,
+    //   PLAYER_TYPES.type2,
+    //   'player-2'
+    // )
+    // this.characters.set(playerChar.id, playerChar)
+    // this.characters.set(player2Char.id, player2Char)
 
-    const npcChar = new Character(
-      this,
-      spawn.x + 64,
-      spawn.y,
-      PLAYER_TYPES.type1,
-      'npc-1'
-    )
-    this.characters.set(playerChar.id, playerChar)
-    this.characters.set(npcChar.id, npcChar)
-    console.log(this.characters);
-
-    if(!localStorage.getItem('gameState')){
-      localStorage.setItem(
-        'gameState',
-        JSON.stringify({ characters : this.characters})
-      )
-    }
+    // if(!localStorage.getItem('gameState')){
+    //   localStorage.setItem(
+    //     'gameState',
+    //     JSON.stringify({ characters : this.characters})
+    //   )
+    // }
     /* ---------------- BOUNDARIES ---------------- */
     const boundaryLayer = map.getObjectLayer('boundaries')
     if (!boundaryLayer) {
@@ -95,13 +95,27 @@ export default class MainScene extends Phaser.Scene {
     })
 
     /* ---------------- CAMERA ---------------- */
-    const localChar = this.characters.get(this.clientId)
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels)
     this.cameras.main.startFollow(localChar.sprite, true, 0.1, 0.1)
     this.cameras.main.setZoom(2)
 
     /* ---------------- INPUT ---------------- */
     this.cursors = this.input.keyboard.createCursorKeys()
+
+    /* ---------- NETWORK ---------- */
+    socket.on('init', ({ playerId, players }) => {
+      const char = new Character(
+        this,
+        state.x,
+        state.y,
+        PLAYER_TYPES.type1,
+        id
+      )
+      this.characters.set(id, char)
+    })
+
+    const localChar = this.characters.get(this.clientId)
+
   }
 
   update() {
@@ -137,30 +151,14 @@ export default class MainScene extends Phaser.Scene {
   }
 
   createPlayerAnimations(type) {
-    const anims = this.anims
-    anims.create({
-      key: 'left',
-      frames: anims.generateFrameNumbers(type.spriteKey, type.left),
-      frameRate: 8,
-      repeat: -1
-    })
-    anims.create({
-      key: 'right',
-      frames: anims.generateFrameNumbers(type.spriteKey, type.right),
-      frameRate: 8,
-      repeat: -1
-    })
-    anims.create({
-      key: 'up',
-      frames: anims.generateFrameNumbers(type.spriteKey, type.up),
-      frameRate: 8,
-      repeat: -1
-    })
-    anims.create({
-      key: 'down',
-      frames: anims.generateFrameNumbers(type.spriteKey, type.down),
-      frameRate: 8,
-      repeat: -1
+    const anims = this.anims;
+    ['left', 'right', 'up', 'down'].forEach(dir => {
+      anims.create({
+        key: dir,
+        frames: anims.generateFrameNumbers(type.spriteKey, type[dir]),
+        frameRate: 8,
+        repeat: -1
+      })
     })
   }
 }

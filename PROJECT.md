@@ -1,104 +1,55 @@
-# 2D Top-Down Web Game - Architecture Overview
+I’m building a 2D top-down multiplayer game using Phaser (client) and FastAPI + Socket.IO (server).
 
-## Tech Stack
-- **Client**: Phaser 3 + Vite
-- **Backend** (planned): FastAPI (for future multiplayer)
+Current state:
 
-## Current State
-- Client-only for now (no networking yet)
-- Tilemap created in Tiled
-- **Tile size**: 16×16
-- **Tileset**: Embedded (`spritesheet.png`)
+Tilemap-based world (Tiled JSON)
 
-### Map Layers
-1. `ground`
-2. `ladders and paths`
-3. `plants-and-buildings-and-trees`
+Characters with sprite animations (up/down/left/right)
 
-### Object Layers
-- `spawnpoints` (player/NPC spawn)
-- `boundaries` (rectangular collision objects)
+Local movement + collision with map boundaries
 
-### Current Features
-- Map renders correctly
-- Camera follows player
-- World bounds are set
+Multiple characters instantiated in the scene
 
-## Architecture Decisions
+Migrating from localStorage “mock multiplayer” to real-time Socket.IO multiplayer
 
-### Character System (Not Hardcoded Players)
-- **`Character` class**:
-  - Owns a Phaser physics sprite
-  - Handles movement + animations
-  - Does **NOT** read keyboard input
+Multiplayer scope (for now):
 
-- **`MainScene`**:
-  - Orchestrates the world
-  - Handles input
-  - Decides which character is locally controlled
-  - Characters stored in `Map<id, Character>`
-  - One character = local player
-  - Other characters = NPCs (moved via code, no input)
+Exactly 2 players
 
-### Movement Model
-- Input → direction vector → Character.move(dir, speed)
+In-memory server state (no DB)
 
-Same movement pipeline for:
-- Player
-- NPCs
-- Future multiplayer entities
+One local player, one remote player
 
-## Coordinate System (Implemented)
+Server relays position + direction updates
 
-### Hierarchy
-1. **Canonical source**: World pixel coordinates
-2. **Derived systems**:
-   - Tile coordinates (world → tile)
-   - Region coordinates (tile → region)
+Client renders and interpolates remote player
 
-### Helper Function
-`getEntityLocation(sprite)` returns:
-- `world {x, y}`
-- `tile {x, y}`
-- `region {x, y}`
-- `regionId "x:y"`
+Backend details:
 
-### Purpose
-- Debugging
-- Future triggers
-- Multiplayer preparation
-- **Note**: Coordinates describe position, they do **NOT** drive physics.
+FastAPI app with global auth middleware
 
-## Collisions
-- Boundaries = Tiled object-layer rectangles
-- Converted into static physics bodies
-- All characters collide with boundaries
+Socket.IO mounted via ASGI
 
-## Camera
-- Follows the local player's sprite
-- Zoomed (pixel-art style)
-- Clamped to world bounds
+Auth middleware must NOT break Socket.IO handshakes
 
-## Animations
-- Sprite atlas-based (single spritesheet)
-- Directional animations: `up`, `down`, `left`, `right`
-- Shared across all characters
+Socket events registered explicitly (no deprecated on_event)
 
-## NPCs
-- Implemented as `Character` instances
-- Moved via simple AI logic (timed direction switching)
-- No keyboard or input dependency
+Frontend details:
 
-## Development Principles
-### What I Care About
-- Clean architecture
-- Systems that scale to multiplayer
-- Avoiding hacks / rewrites
-- Understanding **why** things are designed a certain way
+Vite + Phaser
 
-### Assumptions for Discussions
-- Phaser 3 + Arcade Physics
-- ES modules
-- Prefer clean architecture over quick hacks
-- Explain concepts clearly but practically
-- Don't suggest rebuilding unless necessary
+Socket client initialized once and shared
+
+Scene handles player creation, input, and network sync
+
+What I want from you:
+
+Explain concepts clearly but briefly
+
+Call out architectural mistakes bluntly
+
+Show correct file separation (server/client)
+
+Help me evolve this into a clean, authoritative multiplayer model step by step
+
+Treat this as an ongoing system design + implementation session, not a tutorial.

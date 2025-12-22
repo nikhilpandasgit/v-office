@@ -11,7 +11,8 @@ EXCLUDED_PATHS={
 async def auth_middleware(request: Request, call_next):
     path = request.url.path
 
-    if path in EXCLUDED_PATHS or request.method == "OPTIONS":
+
+    if path in EXCLUDED_PATHS or request.method == "OPTIONS" or path.startswith("/socket.io"):
         return await call_next(request)
     
     auth_header = request.headers.get("Authorization")
