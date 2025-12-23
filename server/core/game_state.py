@@ -6,3 +6,4 @@ SPAWNS = [
 ]
 
 players = {}
+sid_to_player = {}

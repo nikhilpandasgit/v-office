@@ -1,8 +1,9 @@
 export default class Character {
-  constructor(scene, x, y, type, id) {
+  constructor(scene, x, y, type, typeName, id) {
     this.scene = scene
     this.id = id
     this.type = type
+    this.typeName = typeName
 
     this.sprite = scene.physics.add.sprite(
       x,
@@ -17,28 +18,50 @@ export default class Character {
     this.sprite.setCollideWorldBounds(true)
 
     this.lastDir = 'down'
+    this.isMoving = false
   }
 
-  applyInput(dir, speed){
+  // For local player movement
+  move(dir, speed) {
     const body = this.sprite.body
     body.setVelocity(0)
 
-    if(!dir){
+    if (!dir) {
       this.stop()
+      this.isMoving = false
       return
     }
 
+    this.isMoving = true
     body.setVelocity(dir.x * speed, dir.y * speed)
-    this.updateDirection(dir)
-    this.sprite.anims.play(this.lastDir, true)
+
+    if (dir.x < 0) this.lastDir = 'left'
+    else if (dir.x > 0) this.lastDir = 'right'
+    else if (dir.y < 0) this.lastDir = 'up'
+    else if (dir.y > 0) this.lastDir = 'down'
+
+    // Use unique animation key
+    const animKey = `${this.typeName}-${this.lastDir}`
+    this.sprite.anims.play(animKey, true)
   }
 
-  applyServerState(state){
-    this.sprite.setPosition(state.x,state.y)
-
-    if(state.dir && state.dir !== this.lastDir){
+  // For remote player updates from server
+  updateFromServer(state) {
+    this.sprite.setPosition(state.x, state.y)
+    
+    if (state.dir) {
       this.lastDir = state.dir
-      this.sprite.anims.play(this.lastDir, true)
+    }
+    
+    // Check if the player is moving
+    if (state.moving) {
+      const animKey = `${this.typeName}-${this.lastDir}`
+      this.sprite.anims.play(animKey, true)
+      this.isMoving = true
+    } else {
+      // Player stopped moving
+      this.stop()
+      this.isMoving = false
     }
   }
 
@@ -46,31 +69,5 @@ export default class Character {
     this.sprite.setVelocity(0)
     this.sprite.anims.stop()
     this.sprite.setFrame(this.type[this.lastDir].start)
-  }
-
-  updateDirection(dir){
-    if (dir.x < 0) this.lastDir = 'left'
-    else if (dir.x > 0) this.lastDir = 'right'
-    else if (dir.y < 0) this.lastDir = 'up'
-    else if (dir.y > 0) this.lastDir = 'down'
-  }
-
-  move(dir, speed) {
-    const body = this.sprite.body
-    body.setVelocity(0)
-
-    if (!dir) {
-      this.stop()
-      return
-    }
-
-    body.setVelocity(dir.x * speed, dir.y * speed)
-
-    if (dir.x < 0) this.lastDir = 'left'
-    else if (dir.x > 0) this.lastDir = 'right'
-    else if (dir.y < 0) this.lastDir = 'up'
-    else if (dir.y > 0) this.lastDir = 'down'
-
-    this.sprite.anims.play(this.lastDir, true)
   }
 }

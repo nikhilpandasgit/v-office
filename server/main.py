@@ -8,8 +8,10 @@ from core.events import register_events
 
 sio = socketio.AsyncServer(
     async_mode="asgi",
-    cors_allowed_origins="*"
+    cors_allowed_origins=["http://localhost:5173"]
 )
+
+sio_app = socketio.ASGIApp(sio)
 
 # ---------------- LIFESPAN ----------------
 @asynccontextmanager
@@ -31,7 +33,7 @@ app.add_middleware(
 app.middleware("http")(auth_middleware)
 
 # Mount the socketio Server after Middleware
-app.mount("/", socketio.ASGIApp(sio, other_asgi_app=app))
+app.mount("/socket.io", sio_app)
 
 
 # ---------------- ROUTES ----------------
