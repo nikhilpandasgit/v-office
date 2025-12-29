@@ -78,7 +78,7 @@ export default function Overview({session}) {
 
           <button
             onClick={async () => {
-              const response = await apiCall.get('/admin/users')
+              const response = await apiCall.get('/get-player')
               console.log(response.data)
             }}
             style={{

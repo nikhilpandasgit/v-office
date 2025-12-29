@@ -50,6 +50,7 @@ async def list_users(request: Request):
     res = supabase.auth.admin.list_users()
 
     return {
+        "user": user.id,
         "count": len(res),
         "users": [
             {
@@ -61,3 +62,22 @@ async def list_users(request: Request):
             for u in res
         ],
     }
+
+@app.get("/get-player")
+async def get_player(request: Request):
+    user = request.state.user
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+    response = (
+        supabase
+        .table('player')
+        .select('*')
+        .eq("user_id", user.id)
+        .eq("is_deleted", 0)
+        .single()
+        .execute()
+    )
+    
+    return response.data
+
