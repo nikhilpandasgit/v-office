@@ -71,7 +71,7 @@ export default function Auth() {
             {error}
           </div>
         )}
-
+        
         <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Email</label>

@@ -2,15 +2,20 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useNavigate } from 'react-router-dom'
 import apiCall from '../../lib/apiCall'
+import Header from '../../components/header'
 
 export default function Overview({session}) {
   const navigate = useNavigate()
   const user = session.user;
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    navigate('/')
-  }
+  const peopleInHQ = [
+    {
+      'name': 'new-tiny'
+    },
+    {
+      'name': 'new-player-2'
+    }
+  ]
 
   return (
     <div style={{
@@ -21,43 +26,17 @@ export default function Overview({session}) {
       color: '#fff',
     }}>
       {/* Header */}
-      <header style={{
-        padding: '1rem 2rem',
-        borderBottom: '1px solid #333',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
-      }}>
-        <h1 style={{ margin: 0, fontSize: '1.5rem', color: '#646cff' }}>V-Office</h1>
-        <div>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <span style={{ color: '#aaa' }}>{user.email}</span>
-            <button onClick={handleSignOut} style={{
-              padding: '0.5rem 1rem',
-              backgroundColor: '#333',
-              border: 'none',
-              borderRadius: '4px',
-              color: '#fff',
-              cursor: 'pointer'
-            }}>Sign Out</button>
-          </div>
-        </div>
-      </header>
-      
+      <Header user={session.user}></Header>
       {/* Main Content */}
       <main style={{
           flex: 1,
           overflowY: 'auto',
-          padding: '4rem 2rem',
+        padding: '3rem 2rem',
           maxWidth: '1200px',
           margin: '0 auto',
           width: '100%'
       }}>
-          <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Welcome to Your Virtual HQ</h2>
-          <p style={{ fontSize: '1.2rem', color: '#aaa', maxWidth: '600px', lineHeight: '1.6' }}>
-              Connect with your team in a 2D immersive space. Walk up to colleagues to talk, collaborate on whiteboards, and customize your workspace.
-          </p>
-
+        <h2 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>Welcome to Your Virtual HQ</h2>
           <div style={{ marginTop: '3rem', display: 'flex', gap: '1rem' }}>
               <button 
                 onClick={() => navigate('/lobby')}
@@ -94,23 +73,21 @@ export default function Overview({session}) {
             Customize Character
           </button>
         </div>
-          
-          {/* Feature Grid */}
-          <div style={{ marginTop: '5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '2rem'}}>
-             <div style={{ padding: '1.5rem', backgroundColor: '#252525', borderRadius: '8px' }}>
-                 <h3 style={{marginTop: 0}}>Spatial Audio</h3>
-                 <p style={{color: '#aaa'}}>Hear people get louder as you walk closer to them.</p>
-             </div>
-             <div style={{ padding: '1.5rem', backgroundColor: '#252525', borderRadius: '8px' }}>
-                 <h3 style={{marginTop: 0}}>Custom Maps</h3>
-                 <p style={{color: '#aaa'}}>Design your perfect office layout with Tiled.</p>
-             </div>
-             <div style={{ padding: '1.5rem', backgroundColor: '#252525', borderRadius: '8px' }}>
-                 <h3 style={{marginTop: 0}}>Interactive Objects</h3>
-                 <p style={{color: '#aaa'}}>Embed whiteboards, videos, and documents.</p>
-             </div>
-          </div>
 
+        {/* Live player updates */}
+        <div style={{ marginTop: '3rem', gap: '1rem' }}>
+          <h2 style={{ marginBottom: '1rem' }}>People in HQ</h2>
+          <hr style={{ border: '1px solid #333', marginBottom: '1rem' }} />
+          <ul>
+            {
+              peopleInHQ.map((player, index) => {
+                return <li key={`${index}-${player.name}`} style={{ padding: '0.5rem' }}>
+                  {player.name}
+                </li>
+              })
+            }
+          </ul>
+        </div>
       </main>
     </div>
   )
