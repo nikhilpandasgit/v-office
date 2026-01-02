@@ -16,8 +16,15 @@ async def auth_middleware(request: Request, call_next):
         return await call_next(request)
     
     auth_header = request.headers.get("Authorization")
-    
+
+    if not auth_header:
+        return JSONResponse(
+            status_code=401,
+            content={"error": "Missing Authorization header"},
+        )
+        
     auth_header = auth_header.strip()
+    
     if not auth_header.startswith("Bearer "):
         return JSONResponse(
             status_code=401,

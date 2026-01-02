@@ -2,9 +2,9 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import socketio
-from core.supabase import supabase
 from middleware.auth import auth_middleware
 from core.events import register_events
+from api.player import router as player_router
 
 sio = socketio.AsyncServer(
     async_mode="asgi",
@@ -41,43 +41,4 @@ app.mount("/socket.io", sio_app)
 def health():
     return {"status": "ok"}
 
-@app.get("/admin/users")
-async def list_users(request: Request):
-    user = request.state.user
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    res = supabase.auth.admin.list_users()
-
-    return {
-        "user": user.id,
-        "count": len(res),
-        "users": [
-            {
-                "id": u.id,
-                "email": u.email,
-                "created_at": u.created_at,
-                "last_sign_in_at": u.last_sign_in_at,
-            }
-            for u in res
-        ],
-    }
-
-@app.get("/get-player")
-async def get_player(request: Request):
-    user = request.state.user
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    response = (
-        supabase
-        .table('player')
-        .select('*')
-        .eq("user_id", user.id)
-        .eq("is_deleted", 0)
-        .single()
-        .execute()
-    )
-    
-    return response.data
-
+app.include_router(player_router)

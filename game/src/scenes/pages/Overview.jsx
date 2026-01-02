@@ -9,12 +9,8 @@ export default function Overview({session}) {
   const user = session.user;
 
   const peopleInHQ = [
-    {
-      'name': 'new-tiny'
-    },
-    {
-      'name': 'new-player-2'
-    }
+    { 'name': 'new-tiny' },
+    { 'name': 'new-player-2' }
   ]
 
   return (
@@ -25,9 +21,7 @@ export default function Overview({session}) {
       backgroundColor: '#1a1a1a',
       color: '#fff',
     }}>
-      {/* Header */}
       <Header user={session.user}></Header>
-      {/* Main Content */}
       <main style={{
           flex: 1,
           overflowY: 'auto',

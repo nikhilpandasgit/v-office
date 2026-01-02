@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../../lib/supabase'
 import { useNavigate } from 'react-router-dom'
+import apiCall from '../../lib/apiCall'
 
 export default function Auth() {
   const [loading, setLoading] = useState(false)
@@ -8,6 +9,7 @@ export default function Auth() {
   const [password, setPassword] = useState('')
   const [isSignUp, setIsSignUp] = useState(false)
   const [error, setError] = useState(null)
+  const [successMessage, setSuccessMessage] = useState(null)
   
   const navigate = useNavigate()
 
@@ -15,25 +17,47 @@ export default function Auth() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setSuccessMessage(null)
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long')
+      setLoading(false)
+      return
+    }
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
         })
         if (error) throw error
-        alert('Check your email for the login link!')
+        
+        if (data?.user?.identities?.length === 0) {
+          setError('This email is already registered. Please sign in instead.')
+          setIsSignUp(false)
+        } else if (data?.user && !data?.session) {
+          setSuccessMessage('Check your email for the confirmation link!')
+        } else if (data?.session) {
+          navigate('/create-character')
+        }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         })
         if (error) throw error
-        navigate('/overview')
+        
+        const response = await apiCall.get('/get-active-player-by-user-id')
+        
+        if (response && response.data && response.data.character == null) {
+          navigate('/create-character')
+        } else {
+          navigate('/overview')
+        }
       }
     } catch (error) {
-      setError(error.message)
+      setError(error.message || 'An error occurred during authentication')
     } finally {
       setLoading(false)
     }
@@ -71,7 +95,19 @@ export default function Auth() {
             {error}
           </div>
         )}
-        
+
+        {successMessage && (
+          <div style={{
+            padding: '10px',
+            marginBottom: '1rem',
+            backgroundColor: 'rgba(76, 175, 80, 0.2)',
+            borderLeft: '4px solid #4caf50',
+            fontSize: '0.9rem'
+          }}>
+            {successMessage}
+          </div>
+        )}
+
         <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Email</label>
@@ -80,30 +116,37 @@ export default function Auth() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={loading}
               style={{
                 width: '100%',
                 padding: '0.5rem',
                 borderRadius: '4px',
                 border: '1px solid #444',
                 backgroundColor: '#333',
-                color: '#fff'
+                color: '#fff',
+                opacity: loading ? 0.7 : 1
               }}
             />
           </div>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Password</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>
+              Password {isSignUp && <span style={{ fontSize: '0.8rem', color: '#888' }}>(min. 6 characters)</span>}
+            </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              disabled={loading}
+              minLength={6}
               style={{
                 width: '100%',
                 padding: '0.5rem',
                 borderRadius: '4px',
                 border: '1px solid #444',
                 backgroundColor: '#333',
-                color: '#fff'
+                color: '#fff',
+                opacity: loading ? 0.7 : 1
               }}
             />
           </div>
@@ -130,14 +173,20 @@ export default function Auth() {
           {isSignUp ? 'Already have an account?' : "Don't have an account?"}
           {' '}
           <button
-            onClick={() => setIsSignUp(!isSignUp)}
+            onClick={() => {
+              setIsSignUp(!isSignUp)
+              setError(null)
+              setSuccessMessage(null)
+            }}
+            disabled={loading}
             style={{
               background: 'none',
               border: 'none',
               color: '#646cff',
-              cursor: 'pointer',
+              cursor: loading ? 'not-allowed' : 'pointer',
               textDecoration: 'underline',
-              fontSize: 'inherit'
+              fontSize: 'inherit',
+              opacity: loading ? 0.7 : 1
             }}
           >
             {isSignUp ? 'Sign In' : 'Sign Up'}

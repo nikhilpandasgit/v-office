@@ -1,7 +1,14 @@
+import { memo } from "react";
 import { Navigate } from "react-router-dom";
 
 function ProtectedRoute({session, children}) {
-    return session ? children : <Navigate to="/auth" replace />
+    if(session === undefined){
+        return null;
+    }
+    if(!session){
+        return <Navigate to="/auth" replace/>
+    }
+    return children
 }
 
-export default ProtectedRoute
+export default memo(ProtectedRoute)
