@@ -18,8 +18,8 @@ body,
 #root {
   height: 100%;
   margin: 0;
-  /* overflow: hidden; */
 }
+
 html{
     background-color: var(--secondary-color);
     color: var(--text-color);
@@ -73,17 +73,36 @@ html{
 .cc-character-box {
   width: 128px;
   height: 128px;
-  background: #1a1a1a;
+  background: #494949;
   border-radius: 8px;
-  border: 3px solid #4a90e2;
+  outline: 1px solid #4a90e2;
   box-shadow: 0 0 20px rgba(74, 144, 226, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
+/* ---------- Pixel sprites ---------- */
 .cc-pixel {
   image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  display: block;
+}
+
+/* 16px × 4 */
+.cc-main-sprite {
+  width: 64px;
+  height: 64px;
+}
+
+/* 16px × 2 */
+.cc-preview img {
+  width: 32px;
+  height: 32px;
+  display: block;
 }
 
 /* Preview grid */
@@ -105,6 +124,7 @@ html{
   cursor: pointer;
   border: 2px solid transparent;
   transition: all 0.2s;
+  flex-shrink: 0;
 }
 
 .cc-preview:hover {

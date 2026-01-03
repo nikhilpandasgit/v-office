@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Header from "../../components/header";
 
 export default function CreateCharacter({ session }) {
@@ -9,6 +9,8 @@ export default function CreateCharacter({ session }) {
     "/character-sprite/Emily.png",
     "/character-sprite/Joe.png",
     "/character-sprite/Noah.png",
+    "/character-sprite/Aliyah.png",
+    "/character-sprite/Holly.png",
   ];
 
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -59,9 +61,7 @@ export default function CreateCharacter({ session }) {
                 <img
                   src={characters[selectedIndex]}
                   alt="Selected character"
-                  className="cc-pixel"
-                  width={84}
-                  height={84}
+                  className="cc-pixel cc-main-sprite"
                 />
               </div>
 

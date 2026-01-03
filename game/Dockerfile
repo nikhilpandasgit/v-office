@@ -5,7 +5,7 @@ WORKDIR /app
 # Copy dependency files first (better caching)
 COPY package.json package-lock.json* ./
 
-RUN npm install
+RUN npm ci
 
 # Copy rest of the client
 COPY . .
