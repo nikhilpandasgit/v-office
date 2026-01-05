@@ -5,6 +5,7 @@ import socketio
 from middleware.auth import auth_middleware
 from core.events import register_events
 from api.player import router as player_router
+from api.character import router as character_router
 
 sio = socketio.AsyncServer(
     async_mode="asgi",
@@ -42,3 +43,4 @@ def health():
     return {"status": "ok"}
 
 app.include_router(player_router)
+app.include_router(character_router)

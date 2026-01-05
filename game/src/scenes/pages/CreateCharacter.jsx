@@ -1,20 +1,38 @@
 import { useEffect, useState } from "react";
 import Header from "../../components/header";
+import apiCall from '../../lib/apiCall'
 
 export default function CreateCharacter({ session }) {
-  const characters = [
-    "/character-sprite/Cody.png",
-    "/character-sprite/Jenna.png",
-    "/character-sprite/John.png",
-    "/character-sprite/Emily.png",
-    "/character-sprite/Joe.png",
-    "/character-sprite/Noah.png",
-    "/character-sprite/Aliyah.png",
-    "/character-sprite/Holly.png",
-  ];
 
+  const [characters, setCharacters] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [characterName, setCharacterName] = useState("");
+
+  const getSpriteSrc = (character) => `/character-sprite/${character.name}.png`
+
+  useEffect(() => {
+    async function guard() {
+      const response = await apiCall.get("/get-player");
+      if (response.data.character_id) {
+        navigate("/overview", { replace: true });
+      }
+    }
+    guard();
+  }, []);
+
+  useEffect(() => {
+    async function getAllCharacters(){
+      const response = await apiCall.get('/get-all-characters')
+      setCharacters(response.data)
+    }
+    getAllCharacters();
+  }, []);
+
+  useEffect(() => {
+    if(characters.length > 0){
+      setCharacterName(characters[selectedIndex].name)
+    } 
+  }, [characters, selectedIndex])
 
   return (
     <div>
@@ -29,8 +47,16 @@ export default function CreateCharacter({ session }) {
             className={`cc-create-btn ${characterName.trim() ? "cc-enabled" : "cc-disabled"
               }`}
             disabled={!characterName.trim()}
-            onClick={()=> {
-              console.log(characterName, characters[selectedIndex])
+            onClick={async () => {
+              const response = await apiCall.post("/upsert-character", {
+                // id: character.id
+                name: characterName,
+                character_sprite_set_id: characters[selectedIndex].id
+              });
+              if(response.status == 200){
+                alert("Character Created")
+                navigate("/overview", { replace: true });
+              }
             }}
           >
             Create Character
@@ -58,11 +84,13 @@ export default function CreateCharacter({ session }) {
               </button>
 
               <div className="cc-character-box">
-                <img
-                  src={characters[selectedIndex]}
-                  alt="Selected character"
+                {characters.length > 0 && (
+                  <img
+                  src={getSpriteSrc(characters[selectedIndex])}
+                  alt={characters[selectedIndex].name}
                   className="cc-pixel cc-main-sprite"
                 />
+                )}
               </div>
 
               <button
@@ -82,14 +110,14 @@ export default function CreateCharacter({ session }) {
             <div className="cc-preview-grid">
               {characters.map((char, index) => (
                 <div
-                  key={index}
+                  key={char.id}
                   className={`cc-preview ${selectedIndex === index ? "cc-active" : ""
                     }`}
                   onClick={() => setSelectedIndex(index)}
                 >
                   <img
-                    src={char}
-                    alt={`Character ${index + 1}`}
+                    src={getSpriteSrc(char)}
+                    alt={`${char.name}`}
                     className="cc-pixel"
                     width={24}
                     height={24}
