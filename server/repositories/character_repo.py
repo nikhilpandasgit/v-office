@@ -44,7 +44,7 @@ class CharacterRepository:
             .from_('player')
             .select(
                 """
-                character:character_id (
+                *, character:character_id (
                    *, character_sprite_set:character_sprite_set_id (
                        *, character_animation:character_animation (*)
                     )

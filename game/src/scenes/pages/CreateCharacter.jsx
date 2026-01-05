@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import Header from "../../components/header";
 import apiCall from '../../lib/apiCall'
 import { Navigate, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function CreateCharacter({ session }) {
 
   const [characters, setCharacters] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [characterName, setCharacterName] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient()
   const navigate = useNavigate();
   const getSpriteSrc = (character) => `/character-sprite/${character.name}.png`
 
@@ -17,6 +20,7 @@ export default function CreateCharacter({ session }) {
       if (response.data && response.data.character_id) {
         navigate("/overview", { replace: true });
       }
+      setIsLoading(false)
     }
     guard();
   }, []);
@@ -34,6 +38,21 @@ export default function CreateCharacter({ session }) {
       setCharacterName(characters[selectedIndex].name)
     } 
   }, [characters, selectedIndex])
+
+  if (isLoading) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        backgroundColor: '#1a1a1a',
+        color: '#fff'
+      }}>
+        <div>Loading...</div>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -54,9 +73,11 @@ export default function CreateCharacter({ session }) {
                 name: characterName,
                 character_sprite_set_id: characters[selectedIndex].id
               });
-              console.log(response.data, ' - response.data')
               if(response.status == 200 && response.data['character_id'] !== null){
                 alert("Character Created")
+                await queryClient.invalidateQueries({ queryKey: ["hasCharacter"] })
+                // delay to ensure cache is updated before navigation
+                await new Promise(resolve => setTimeout(resolve, 100));
                 navigate("/overview", { replace: true });
               }
             }}
