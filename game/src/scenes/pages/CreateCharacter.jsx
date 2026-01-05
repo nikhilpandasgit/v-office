@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react";
 import Header from "../../components/header";
 import apiCall from '../../lib/apiCall'
+import { Navigate, useNavigate } from "react-router-dom";
 
 export default function CreateCharacter({ session }) {
 
   const [characters, setCharacters] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [characterName, setCharacterName] = useState("");
-
+  const navigate = useNavigate();
   const getSpriteSrc = (character) => `/character-sprite/${character.name}.png`
 
   useEffect(() => {
     async function guard() {
-      const response = await apiCall.get("/get-player");
-      if (response.data.character_id) {
+      const response = await apiCall.get("/get-active-player-by-user-id");
+      if (response.data && response.data.character_id) {
         navigate("/overview", { replace: true });
       }
     }
@@ -53,7 +54,8 @@ export default function CreateCharacter({ session }) {
                 name: characterName,
                 character_sprite_set_id: characters[selectedIndex].id
               });
-              if(response.status == 200){
+              console.log(response.data, ' - response.data')
+              if(response.status == 200 && response.data['character_id'] !== null){
                 alert("Character Created")
                 navigate("/overview", { replace: true });
               }

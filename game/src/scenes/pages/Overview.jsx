@@ -51,7 +51,7 @@ export default function Overview({session}) {
 
           <button
             onClick={async () => {
-              const response = await apiCall.get('/get-player')
+              const response = await apiCall.get('/get-character-sprite-details')
               console.log(response.data)
             }}
             style={{
