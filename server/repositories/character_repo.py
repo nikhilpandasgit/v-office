@@ -1,3 +1,4 @@
+from fastapi import Request
 from core.supabase import supabase
 from models.character_models import UpsertCharacterRequest
 
@@ -34,3 +35,8 @@ class CharacterRepository:
         
         return result
     
+    def get_character_sprite_details(user):
+        character_sprite = (
+            supabase
+            .table()
+        )

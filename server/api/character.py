@@ -10,7 +10,8 @@ async def get_all_characters():
     return all_characters
 
 @router.post('/upsert-character')
-async def upsert_character(request: Request, payload: UpsertCharacterRequest):
+async def upsert_character(payload: UpsertCharacterRequest, request: Request):
+    user = request.state.user
     data = {
             "name": payload.name,
             "character_sprite_set_id": payload.character_sprite_set_id
@@ -19,8 +20,23 @@ async def upsert_character(request: Request, payload: UpsertCharacterRequest):
     if payload.id:
         data["id"] = payload.id
 
-    response = CharacterRepository.upsert_character(request, data)
-    if not response.data:
+    character = CharacterRepository.upsert_character(data)
+    if not character.data:
         raise HTTPException(status_code=500, detail="Character Upsert Failed")
     
-    return response.data[0]
+    player_update = CharacterRepository.update_player_character(character.data[0], user)
+    if not player_update.data:
+        raise HTTPException(status_code=500, detail="Updating players character failed")
+    
+    return player_update
+
+@router.get('/get-character-sprite-details')
+async def get_character_sprite_details(request: Request):
+    user = request.state.user
+    
+    character_sprite = CharacterRepository.get_character_sprite_details(user)
+    # if not character_sprite.data:
+    #     raise HTTPException(status_code=500, detail="Fetching character sprite details failed")
+    
+    return character_sprite
+    

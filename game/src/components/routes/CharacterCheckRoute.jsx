@@ -1,25 +1,21 @@
-import { useEffect, useState } from "react"
+import { Navigate, Outlet } from "react-router-dom"
+import { useQuery } from "@tanstack/react-query"
 import apiCall from "../../lib/apiCall"
-import { Navigate } from "react-router-dom"
 
 export default function CharacterCheckRoute({ children }){
-    const [hasCharacter, setHasCharacter] = useState(null)
 
-    useEffect(() => {
-        const checkCharacter = async() => {
-            try{
-                const response = await apiCall.get('/get-active-player-by-user-id')
-                setHasCharacter(response.data.character !== null)
-            } catch (error) {
-                console.error('error fetching character', error)
-                setHasCharacter(false)
-            }
-        }
+    const { data, isLoading, isError } = useQuery({
+        queryKey: ["hasCharacter"],
+        queryFn: async () => {
+            const res = await apiCall.get("/get-active-player-by-user-id")
+            return res.data.character !== null
+        },
+        staleTime: Infinity,
+        gcTime: Infinity,
+        retry: 1,
+    })
 
-        checkCharacter()
-    }, [])
-
-    if(hasCharacter === null){
+    if (isLoading) {
         return (
             <div style={{
                 display: 'flex',
@@ -34,9 +30,7 @@ export default function CharacterCheckRoute({ children }){
         )
     }
 
-    if(hasCharacter === false){
-        return <Navigate to="/create-character" replace/>
-    }
+    if ( isError || !data ) return <Navigate to="/create-character" replace />
 
     return children
 }

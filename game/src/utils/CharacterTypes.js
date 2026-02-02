@@ -16,9 +16,3 @@ export const PLAYER_TYPES = {
     down: { start: 936, end: 939 }
   }
 }
-
-const transaction = {
-  "income": {
-    
-  }
-}

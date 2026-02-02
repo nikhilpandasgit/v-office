@@ -51,8 +51,12 @@ export default function Overview({session}) {
 
           <button
             onClick={async () => {
-              const response = await apiCall.get('/get-active-player-by-user-id')
-              console.log(response.data)
+              try {
+                const response = await apiCall.get('/get-character-sprite-details')
+                console.log(response)
+              } catch (error) {
+                console.warn(error, 'Error while fetching character sprite')
+              }
             }}
             style={{
               padding: '1rem 2rem',
