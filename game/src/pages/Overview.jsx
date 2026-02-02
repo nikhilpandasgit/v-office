@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
-import apiCall from '../../lib/apiCall'
-import Header from '../../components/header'
+import apiCall from '../lib/apiCall'
+import Header from '../components/header'
 
 export default function Overview({session}) {
   const navigate = useNavigate()
@@ -51,7 +51,7 @@ export default function Overview({session}) {
 
           <button
             onClick={async () => {
-              const response = await apiCall.get('/get-player')
+              const response = await apiCall.get('/get-active-player-by-user-id')
               console.log(response.data)
             }}
             style={{

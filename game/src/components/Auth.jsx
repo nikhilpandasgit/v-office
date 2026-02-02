@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../lib/supabase'
 import { useNavigate } from 'react-router-dom'
-import apiCall from '../../lib/apiCall'
+import apiCall from '../lib/apiCall'
 
 export default function Auth() {
   const [loading, setLoading] = useState(false)

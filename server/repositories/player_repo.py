@@ -6,7 +6,7 @@ class PlayerRepository:
         response = (
             supabase
             .table("player")
-            .select("*, character:character_id(*)")
+            .select("*, character:character_id(*, character_sprite_set:character_sprite_set_id(*))")
             .eq("user_id", user_id)
             .eq("is_deleted", 0)
             .limit(1)

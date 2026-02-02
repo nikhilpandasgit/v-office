@@ -1,11 +1,11 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom';
 
 export default function Lobby() {
   const navigate = useNavigate()
 
   const maps = [
     { id: 1, name: 'Default Office', description: 'The classic v-office layout.' },
-    // more maps can be added here
+    // other maps
   ]
 
   return (

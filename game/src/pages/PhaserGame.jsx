@@ -1,12 +1,31 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Phaser from 'phaser'
-import MainScene from '../scenes/MainScene'
+import MainScene from './scenes/MainScene'
 import { socket } from '../lib/socket'
+import apiCall from '../lib/apiCall'
 
 const PhaserGame = () => {
     const gameContainer = useRef(null)
     const game = useRef(null)
+    const initialised = useRef(false);
+    const [response, setResponse] = useState(null);
 
+    useEffect(() => {
+        async function fetchCharacter() {
+            const data = await apiCall.get('/get-active-player-by-user-id');
+            console.log(data);
+            setResponse(data);
+        }
+        fetchCharacter();
+    }, [])
+
+    useEffect(() => {
+        if(!response || !game.current) return;
+
+        game.current.registry.set('playerData', response);
+        game.current.events.emit('player-data-ready', response);
+    }, [response])
+    
     useEffect(() => {
         if (game.current) return
 
@@ -79,10 +98,10 @@ const PhaserGame = () => {
             socket.off('state', handleState)
             socket.off('player-joined', handlePlayerJoined)
             socket.off('player-left', handlePlayerLeft)
-            
+
             if (game.current) {
                 game.current.events.off('player-input', handleInput)
-                game.current.destroy(true)
+                game.current?.destroy(true)
                 game.current = null
             }
             socket.disconnect()

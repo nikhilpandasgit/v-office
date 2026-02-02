@@ -14,8 +14,8 @@ class CharacterRepository:
         
         return response.data if response.data else None
     
-    def upsert_character(payload):
-        user = request.session.user
+    def upsert_character(request, payload):
+        user = request.state.user
         result = (
             supabase
             .table("character")
@@ -25,12 +25,12 @@ class CharacterRepository:
             )
             .execute()
         )
+    
+        character_id = result.data[0]["id"]
         
-        player_update = (
-            supabase
-            .table("player")
-            .update({
-                "character_id": character["id"]
-                })
-            .eq("user_id", user.id).execute())
+        supabase.table("player").update({
+            "character_id": character_id
+        }).eq("user_id", user.id).execute()
+        
         return result
+    

@@ -1,9 +1,9 @@
 import { Routes, Route, Navigate, Outlet } from 'react-router-dom'
-import Overview from '../../scenes/pages/Overview'
-import Auth from '../../scenes/pages/Auth'
-import Lobby from '../../scenes/pages/Lobby'
-import CreateCharacter from '../../scenes/pages/CreateCharacter'
-import PhaserGame from '../PhaserGame'
+import Overview from '../../pages/Overview'
+import Auth from '../Auth'
+import Lobby from '../../pages/Lobby'
+import CreateCharacter from '../../pages/CreateCharacter'
+import PhaserGame from '../../pages/PhaserGame'
 import CharacterCheckRoute from './CharacterCheckRoute'
 
 function ProtectedLayout({session}){

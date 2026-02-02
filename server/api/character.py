@@ -10,7 +10,7 @@ async def get_all_characters():
     return all_characters
 
 @router.post('/upsert-character')
-async def upsert_character(payload: UpsertCharacterRequest):
+async def upsert_character(request: Request, payload: UpsertCharacterRequest):
     data = {
             "name": payload.name,
             "character_sprite_set_id": payload.character_sprite_set_id
@@ -19,9 +19,8 @@ async def upsert_character(payload: UpsertCharacterRequest):
     if payload.id:
         data["id"] = payload.id
 
-    response = CharacterRepository.upsert_character(data)
+    response = CharacterRepository.upsert_character(request, data)
     if not response.data:
         raise HTTPException(status_code=500, detail="Character Upsert Failed")
-    
     
     return response.data[0]

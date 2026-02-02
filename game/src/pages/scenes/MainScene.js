@@ -1,6 +1,6 @@
 import Phaser from 'phaser'
-import Character from '../entities/Character'
-import { PLAYER_TYPES } from '../utils/CharacterTypes'
+import Character from '../../lib/Character'
+import { PLAYER_TYPES } from '../../utils/CharacterTypes'
 
 export default class MainScene extends Phaser.Scene {
   constructor() {
@@ -62,18 +62,16 @@ export default class MainScene extends Phaser.Scene {
 
     // Setup socket listeners after assets are loaded
     this.setupSocketListeners()
-
-    const registryClientId = this.registry.get('clientId')
-    const initialPlayers = this.registry.get('initialPlayers')
-    
-    this.clientId = registryClientId
-    Object.entries(initialPlayers).forEach(([id, state]) => {
-      this.createCharacter(id, state)
-    })
   }
 
   setupSocketListeners() {
+    this.game.events.removeAllListeners('socket-init');
+    this.game.events.removeAllListeners('socket-state');
+    this.game.events.removeAllListeners('socket-player-joined');
+    this.game.events.removeAllListeners('socket-player-left');
+    
     this.game.events.on('socket-init', (data) => {
+      if (this.clientId) return;
       this.clientId = data.playerId
 
       Object.entries(data.players).forEach(([id, state]) => {
