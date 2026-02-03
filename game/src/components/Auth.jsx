@@ -50,7 +50,7 @@ export default function Auth() {
         
         const response = await apiCall.get('/get-active-player-by-user-id')
         
-        if (response && response.data && response.data.character == null) {
+        if (response.data.character == null) {
           navigate('/create-character')
         } else {
           navigate('/overview')

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request # type: ignore
 from repositories.character_repo import CharacterRepository
 from models.character_models import UpsertCharacterRequest
 

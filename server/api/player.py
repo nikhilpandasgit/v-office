@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request # type: ignore
 from repositories.player_repo import PlayerRepository
 
 router = APIRouter()
