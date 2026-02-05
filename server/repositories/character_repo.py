@@ -4,15 +4,24 @@ from models.character_models import UpsertCharacterRequest
 
 class CharacterRepository:
     @staticmethod
-    def get_all_characters():
-        response = (
-            supabase
-            .table('character_sprite_set')
-            .select('*')
-            .eq("is_deleted", False)
-            .execute()
-        )
-        
+    def get_all_characters(get_sprites: bool):
+        if(get_sprites):
+            response = (
+                supabase
+                .from_('character_sprite_set')
+                .select("id, sprite_key, default_frame , character_animation(id, frames, direction, sprite_set_id)")
+                .eq('is_deleted', False)
+                .execute()
+            )
+        else:
+            response = (
+                supabase
+                .table('character_sprite_set')
+                .select('*')
+                .eq("is_deleted", False)
+                .execute()
+            )
+            
         return response.data if response.data else None
     
     def upsert_character(payload):
@@ -44,11 +53,8 @@ class CharacterRepository:
             .from_('player')
             .select(
                 """
-                *, character:character_id (
-                   *, character_sprite_set:character_sprite_set_id (
-                       *, character_animation:character_animation (*)
-                    )
-                )
+                id, user_id, character:character_id (
+                   id, name, character_sprite_set:character_sprite_set_id (id, sprite_key, default_frame))
                 """
             )
             .eq("user_id", user.id)

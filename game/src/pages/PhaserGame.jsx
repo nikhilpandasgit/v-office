@@ -8,23 +8,32 @@ const PhaserGame = () => {
     const gameContainer = useRef(null)
     const game = useRef(null)
     const initialised = useRef(false);
-    const [response, setResponse] = useState(null);
+    const [playerCharacter, setPlayerCharacter] = useState(null);
+    const [allCharacters, setAllCharacters] = useState(null);
 
     useEffect(() => {
         async function fetchCharacter() {
-            const data = await apiCall.get('/get-active-player-by-user-id');
-            console.log(data);
-            setResponse(data);
+            const [data, getAllCharacters] = await Promise.all([
+                apiCall.get('/get-character-sprite-details'),
+                apiCall.get('/get-all-characters/', {
+                    params: {
+                        'get_sprites' : true 
+                    }
+                })
+            ]);
+            setPlayerCharacter(data);
+            setAllCharacters(getAllCharacters);
         }
         fetchCharacter();
     }, [])
 
     useEffect(() => {
-        if(!response || !game.current) return;
+        if(!playerCharacter || !game.current) return;
 
-        game.current.registry.set('playerData', response);
-        game.current.events.emit('player-data-ready', response);
-    }, [response])
+        game.current.registry.set('playerData', playerCharacter);
+        game.current.registry.set('allCharacters', allCharacters);
+        game.current.events.emit('allCharacters', allCharacters.data);
+    }, [playerCharacter, allCharacters])
     
     useEffect(() => {
         if (game.current) return

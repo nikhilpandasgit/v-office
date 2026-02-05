@@ -5,8 +5,8 @@ import { PLAYER_TYPES } from '../../utils/CharacterTypes'
 export default class MainScene extends Phaser.Scene {
   constructor() {
     super('MainScene')
-    this.characters = new Map()
-    this.clientId = null
+    this.characters = new Map() // all characters in game
+    this.currentPlayer = null // current player
   }
 
   preload() {
@@ -28,11 +28,6 @@ export default class MainScene extends Phaser.Scene {
     map.createLayer('plants-and-buildings-and-trees', tileset)
 
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels)
-
-    // Create animations for all player types with unique keys
-    Object.entries(PLAYER_TYPES).forEach(([typeName, playerType]) => {
-      this.createPlayerAnimations(typeName, playerType)
-    })
 
     // Boundaries and collisions
     const boundaryLayer = map.getObjectLayer('boundaries')
@@ -69,10 +64,20 @@ export default class MainScene extends Phaser.Scene {
     this.game.events.removeAllListeners('socket-state');
     this.game.events.removeAllListeners('socket-player-joined');
     this.game.events.removeAllListeners('socket-player-left');
-    
+
+    // Create animations for all character types
+    this.game.events.on('allCharacters', (allCharacters) => {
+      allCharacters.forEach(character => {
+        this.createCharacterAnimations(
+          character.sprite_key,
+          character.character_animation
+        );
+      });
+    });
+
     this.game.events.on('socket-init', (data) => {
-      if (this.clientId) return;
-      this.clientId = data.playerId
+      if (this.currentPlayer) return;
+      this.currentPlayer = data.playerId
 
       Object.entries(data.players).forEach(([id, state]) => {
         this.createCharacter(id, state)
@@ -113,7 +118,6 @@ export default class MainScene extends Phaser.Scene {
     const playerNumber = parseInt(id.split('-')[1])
     const typeName = playerNumber === 1 ? 'type1' : 'type2'
     const type = PLAYER_TYPES[typeName]
-        
     const char = new Character(
       this,
       state.x,
@@ -127,7 +131,7 @@ export default class MainScene extends Phaser.Scene {
     this.physics.add.collider(char.sprite, this.boundaries)
     
     // Follow local character with camera
-    if (id === this.clientId) {
+    if (id === this.currentPlayer) {
       this.cameras.main.startFollow(char.sprite, true, 0.1, 0.1)
     }
   }
@@ -141,7 +145,7 @@ export default class MainScene extends Phaser.Scene {
     }
     
     // Update other players except local player
-    if (id !== this.clientId) {
+    if (id !== this.currentPlayer) {
       char.updateFromServer(state)
     }
   }
@@ -155,7 +159,7 @@ export default class MainScene extends Phaser.Scene {
   }
 
   update() {
-    const localChar = this.characters.get(this.clientId)
+    const localChar = this.characters.get(this.currentPlayer)
     if (!localChar) return
 
     const speed = 50
@@ -169,14 +173,32 @@ export default class MainScene extends Phaser.Scene {
     localChar.move(dir, speed)
     
     // Emit input to server with movement state
-    this.game.events.emit('player-input', {
-      state: {
-        x: localChar.sprite.x,
-        y: localChar.sprite.y,
-        dir: localChar.lastDir,
-        moving: dir !== null
-      }
-    })
+    // this.game.events.emit('player-input', {
+    //   state: {
+    //     x: localChar.sprite.x,
+    //     y: localChar.sprite.y,
+    //     dir: localChar.lastDir,
+    //     moving: dir !== null
+    //   }
+    // })
+  }
+
+  createCharacterAnimations(typeName, animations) {
+    animations.forEach(anim => {
+      const animKey = `${typeName}-${anim.direction}`;
+
+      if (this.anims.exists(animKey)) return;
+
+      this.anims.create({
+        key: animKey,
+        frames: anim.frames.map(frame => ({
+          key: 'sprite',
+          frame
+        })),
+        frameRate: 8,
+        repeat: -1
+      });
+    });
   }
 
   createPlayerAnimations(typeName, type) {

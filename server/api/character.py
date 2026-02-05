@@ -4,9 +4,9 @@ from models.character_models import UpsertCharacterRequest
 
 router = APIRouter()
 
-@router.get('/get-all-characters')
-async def get_all_characters():
-    all_characters = CharacterRepository.get_all_characters()
+@router.get('/get-all-characters/')
+async def get_all_characters(get_sprites: bool = False):
+    all_characters = CharacterRepository.get_all_characters(get_sprites)
     return all_characters
 
 @router.post('/upsert-character')
@@ -35,8 +35,8 @@ async def get_character_sprite_details(request: Request):
     user = request.state.user
     
     character_sprite = CharacterRepository.get_character_sprite_details(user)
-    # if not character_sprite.data:
-    #     raise HTTPException(status_code=500, detail="Fetching character sprite details failed")
+    if not character_sprite.data:
+        raise HTTPException(status_code=500, detail="Fetching character sprite details failed")
     
     return character_sprite
     
