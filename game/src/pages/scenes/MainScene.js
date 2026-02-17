@@ -56,7 +56,7 @@ export default class MainScene extends Phaser.Scene {
     this.cursors = this.input.keyboard.createCursorKeys()
 
     // Setup socket listeners after assets are loaded
-    this.setupSocketListeners()
+    this.setupSocketListeners();
   }
 
   setupSocketListeners() {
@@ -173,14 +173,14 @@ export default class MainScene extends Phaser.Scene {
     localChar.move(dir, speed)
     
     // Emit input to server with movement state
-    // this.game.events.emit('player-input', {
-    //   state: {
-    //     x: localChar.sprite.x,
-    //     y: localChar.sprite.y,
-    //     dir: localChar.lastDir,
-    //     moving: dir !== null
-    //   }
-    // })
+    this.game.events.emit('player-input', {
+      state: {
+        x: localChar.sprite.x,
+        y: localChar.sprite.y,
+        dir: localChar.lastDir,
+        moving: dir !== null
+      }
+    })
   }
 
   createCharacterAnimations(typeName, animations) {
@@ -199,22 +199,5 @@ export default class MainScene extends Phaser.Scene {
         repeat: -1
       });
     });
-  }
-
-  createPlayerAnimations(typeName, type) {
-    const anims = this.anims;
-    ['left', 'right', 'up', 'down'].forEach(dir => {
-      // Create unique animation key for each character type
-      const animKey = `${typeName}-${dir}`
-      
-      if (!anims.exists(animKey)) {
-        anims.create({
-          key: animKey,
-          frames: anims.generateFrameNumbers(type.spriteKey, type[dir]),
-          frameRate: 8,
-          repeat: -1
-        })
-      }
-    })
   }
 }

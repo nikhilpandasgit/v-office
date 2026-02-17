@@ -11,6 +11,7 @@ const PhaserGame = () => {
     const [playerCharacter, setPlayerCharacter] = useState(null);
     const [allCharacters, setAllCharacters] = useState(null);
 
+    // Get character details and all characters from server
     useEffect(() => {
         async function fetchCharacter() {
             const [data, getAllCharacters] = await Promise.all([
@@ -21,20 +22,24 @@ const PhaserGame = () => {
                     }
                 })
             ]);
+            console.log(data);
             setPlayerCharacter(data);
             setAllCharacters(getAllCharacters);
         }
         fetchCharacter();
     }, [])
 
+    // Set fetched character details in game registry
     useEffect(() => {
         if(!playerCharacter || !game.current) return;
 
-        game.current.registry.set('playerData', playerCharacter);
+        game.current.registry.set('currentPlayerCharacter', playerCharacter);
         game.current.registry.set('allCharacters', allCharacters);
         game.current.events.emit('allCharacters', allCharacters.data);
+
     }, [playerCharacter, allCharacters])
     
+    // Setup socket event handlers
     useEffect(() => {
         if (game.current) return
 
